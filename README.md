@@ -1,8 +1,13 @@
 # MongoDBClusterOnDocker
+
+
+[![Docker build](https://img.shields.io/docker/build/xplorld/mongodbclusterondocker.svg)](https://hub.docker.com/r/xplorld/mongodbclusterondocker/)
+
+
 To let anyone open a mongoDB cluster without pain. (and without persistence)
 
 # Usage
-```
+```bash
 docker pull xplorld/mongodbclusterondocker
 # create a cluster with:
 # 5 routers
