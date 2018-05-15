@@ -21,7 +21,7 @@ docker run -it -p 27017:27017 xplorld/mongodbclusterondocker 2 3 4 5 -dbs db1 db
 
 # ports
 
-support a cluster has `i` config servers, `j` routers, `n` shards, `z` replicas per shard, ports are:
+Suppose there is a cluster has `i` config servers, `j` routers, `n` shards, `z` replicas per shard, ports are:
 
 | role | port |
 |-|-|
