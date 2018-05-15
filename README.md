@@ -16,7 +16,7 @@ docker pull xplorld/mongodbclusterondocker
 # 2 shards
 # db1 db2 db3 are sharded
 # port 27017, 27018, 27019, 27020, 27021 are 5 routers
-docker run -it -p 27017:27017 xplorld/mongodbclusterondocker 2 3 4 5 -dbs db1 db2 db3
+docker run -it -p 27017:27017 xplorld/mongodbclusterondocker --shardSize 2 --replicaSize 3 --configSize 4 --routerSize 5 --databases db1 db2 db3 
 ```
 
 # ports
