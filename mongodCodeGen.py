@@ -9,20 +9,24 @@ parser.add_argument('--shardSize', type=int, required=True)
 parser.add_argument('--replicaSize', type=int, required=True)
 parser.add_argument('--configSize', type=int, required=True)
 parser.add_argument('--routerSize', type=int, required=True)
+parser.add_argument('--host', type=str, default='127.0.0.1',
+                    help='host of this container. A process in the container '
+                         'or in the client must be able to connect this host '
+                         'to reach MongoDB servers. Default: 127.0.0.1')
 parser.add_argument('--databases', type=str, nargs='*')
 args = parser.parse_args()
 
 
-def makeReplSetConfig(basePort, count, name, configsvr):
-    member_doc = '{{ _id : {}, host : "127.0.0.1:{}" }}'
-    members = ','.join(member_doc.format(i, basePort + i)
+def makeReplSetConfig(host, basePort, count, name, configsvr):
+    member_doc = '{{ _id : {}, host : "{}:{}" }}'
+    members = ','.join(member_doc.format(i, host, basePort + i)
                        for i in range(count))
     doc = 'rs.initiate({{_id: "{}", configsvr: {}, members: [{}] }});'
     return doc.format(name, 'true' if configsvr else 'false', members)
 
 
-def makeAddShardConfig(basePort, name):
-    doc = 'sh.addShard("{}/127.0.0.1:{}");'.format(name, basePort)
+def makeAddShardConfig(host, basePort, name):
+    doc = 'sh.addShard("{}/{}:{}");'.format(name, host, basePort)
     return doc
 
 
@@ -31,8 +35,8 @@ def makeEnableShardingConfig(name):
     return doc
 
 
-def makeConfigDbAddress(basePort, count, name):
-    ips = ','.join('127.0.0.1:{}'.format(basePort + i) for i in range(count))
+def makeConfigDbAddress(host, basePort, count, name):
+    ips = ','.join('{}:{}'.format(host, basePort + i) for i in range(count))
     return '{}/{}'.format(name, ips)
 
 
@@ -49,7 +53,7 @@ def main():
         sys.stdout.write('mongod --port {} --logpath {}/log --dbpath {}/db --configsvr --bind_ip_all --replSet {} --fork\n'.format(
             port, basePath, basePath, configReplSetName))
     replSetConfig = makeReplSetConfig(
-        configBasePort, args.configSize, configReplSetName, True)
+        args.host, configBasePort, args.configSize, configReplSetName, True)
     sys.stdout.write(
         "mongo --port {} --eval '{}'\n".format(configBasePort, replSetConfig))
 
@@ -58,7 +62,7 @@ def main():
     for i in range(args.routerSize):
         basePath = '/mongo/router/{}'.format(i)
         dbAddress = makeConfigDbAddress(
-            configBasePort, args.configSize, configReplSetName)
+            args.host, configBasePort, args.configSize, configReplSetName)
         sys.stdout.write('mkdir -p {}\n'.format(basePath))
         sys.stdout.write('mongos --port {} --logpath {}/log --configdb {} --bind_ip_all --fork\n'.format(
             routerBasePort + i, basePath, dbAddress))
@@ -76,11 +80,11 @@ def main():
                 port, basePath, basePath, replSetName))
         # mongod's in this replSet has all up, call rs.initiate
         replSetConfig = makeReplSetConfig(
-            basePort, args.replicaSize, replSetName, False)
+            args.host, basePort, args.replicaSize, replSetName, False)
         sys.stdout.write(
             "mongo --port {} --eval '{}'\n".format(basePort, replSetConfig))
         # add shard to config server
-        addShardConfig = makeAddShardConfig(basePort, replSetName)
+        addShardConfig = makeAddShardConfig(args.host, basePort, replSetName)
         sys.stdout.write(
             "mongo --port {} --eval '{}'\n".format(routerBasePort, addShardConfig))
 
