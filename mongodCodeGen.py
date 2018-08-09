@@ -9,6 +9,8 @@ parser.add_argument('--shardSize', type=int, required=True)
 parser.add_argument('--replicaSize', type=int, required=True)
 parser.add_argument('--configSize', type=int, required=True)
 parser.add_argument('--routerSize', type=int, required=True)
+parser.add_argument('--configReplSetName', type=str,
+                    default='mongoreplsetconfig')
 parser.add_argument('--host', type=str, default='127.0.0.1',
                     help='host of this container. A process in the container '
                          'or in the client must be able to connect this host '
@@ -45,7 +47,7 @@ def main():
 
     # config servers first
     configBasePort = 47000
-    configReplSetName = 'mongoreplsetconfig'
+    configReplSetName = args.configReplSetName
     for i in range(args.configSize):
         port = configBasePort + i
         basePath = '/mongo/config/{}'.format(i)
